@@ -1,0 +1,107 @@
+{% extends 'base.html' %}
+
+{% block title %}Chat{% endblock title %}
+
+    {% block head %}Welcome to {{ room.name }}!{% endblock head %}
+{% block body %}
+
+
+    <div class="btn-group">
+        <button type="button" class="btn btn-outline-dark dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+            Room Members
+        </button>
+        {% if is_admin %}
+            <a href="{{url_for('edit_room',room_id=room._id)}}"><button class="btn btn-outline-info ml-3">Edit Room</button></a>
+        {% endif %}
+
+        <div class="dropdown-menu">
+            {% for member in room_members %}
+            <li class="dropdown-item">{{ member._id.username }}</li>
+            {% endfor %}
+        </div>
+    </div>
+
+    <div id="messages" class="mt-3">
+        {% for message in messages %}
+            {% if username == message.sender %}
+                <p class="d-flex flex-column align-items-end ">{{message.text}}<small>{{ message.created_at }}</small></p>         
+            {% else %}
+                <p class="d-flex flex-column align-items-start "><span><b>{{message.sender}}</b>:{{message.text}}</span><small>{{ message.created_at }}</small></p>
+            {% endif %}
+        {% endfor %}
+    </div>
+        <form action="" id="message_input_form">
+        <div class="input-group mt-3 typing_bar">
+            <input type="text" class="form-control" id="message_input" placeholder="type...">
+            <button type="submit" class="btn btn-outline-dark">Send</button>
+        </div>
+        </form>
+
+    
+{% endblock body %}
+
+
+{% block script %}
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.3.0/socket.io.js"></script>
+<script>
+    const socket=io.connect("http://127.0.0.1:5000");
+
+    socket.on('connect',function(){
+        socket.emit('join_room',{
+            username:"{{ username }}",
+            room: "{{ room._id }}"
+        })
+        let message_input=document.getElementById('message_input');
+        document.getElementById('message_input_form').onsubmit= function(e){
+            e.preventDefault();
+            message=message_input.value.trim();
+            if(message.length){
+                socket.emit('send_message',{
+                    username:"{{username}}",
+                    room:"{{ room._id }}",
+                    message:message
+                })
+            }
+            message_input.value="";
+            message_input.focus();
+        }
+    });
+    socket.on('join_room_announcement',function(data){
+        
+        const newNode=document.createElement('div')
+        newNode.innerHTML=`<small class="d-flex justify-content-center"><b>${data.username} </b> has joined the room</small>`
+        document.getElementById('messages').appendChild(newNode)
+    });
+
+    socket.on('receive_message',function(data){
+        
+        const newNode=document.createElement('div')
+        if(data.username == `{{ username }}`){
+            newNode.innerHTML=`<p class="d-flex justify-content-end ">${data.message}</p>`
+        }else{
+            newNode.innerHTML=`<p class="d-flex justify-content-start "><b>${data.username}</b> :${data.message}</p>`
+        }
+                    
+                    
+        document.getElementById('messages').appendChild(newNode)
+    });
+
+    socket.on('disconnect',function(){
+        socket.emit('leave_room',{
+            username:"{{ username }}",
+            room: "{{ room._id }}"
+        })
+    });
+
+    socket.on('leav_room_announcement',function(data){
+        console.log(data,"room leaved")
+        const newNode=document.createElement('div')
+        newNode.innerHTML=`<small class="d-flex justify-content-center"><b>${data.username}</b> has leaved the room</small>`
+        document.getElementById('messages').appendChild(newNode)
+    });
+
+
+</script>
+
+{% endblock script %}

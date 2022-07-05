@@ -1,0 +1,23 @@
+{% extends 'base.html' %}
+
+    {% block title %}Chat app{% endblock title %} 
+
+    {% block head %}Hi,{% if current_user.is_authenticated %}
+                {{ current_user.username}} !
+                <h3>Rooms Avalable</h3>
+                {% else %}Guest !{% endif %} 
+    {% endblock head %} 
+
+{% block body %}
+
+
+{% for room in rooms %}
+    <div class="card mb-2">
+        <div class="card-body">
+            <h4><a href="/rooms/{{ room._id.room_id }}">{{ room.room_name }}</a></h4>
+        </div>
+    </div>
+{% endfor %}
+
+{% endblock body %}
+

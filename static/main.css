@@ -1,0 +1,18 @@
+/* body{
+    background-color: rgba(0, 0, 0, 0.164);
+} */
+.container{
+    /* width: 75%; */
+    margin: auto;
+}
+#message{
+    margin-top: 7px;
+    border: 2px solid #333;  
+    padding: 3px;
+    max-width: 60%;
+    /* overflow-y: scroll; */
+}
+.typing_bar{
+    max-width: 60%;
+    position: fixed;
+}
